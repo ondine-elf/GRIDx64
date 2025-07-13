@@ -9,7 +9,8 @@
         "errno.h": "c",
         "framebuffer.h": "c",
         "rgb.h": "c",
-        "acpi.h": "c"
+        "acpi.h": "c",
+        "stdlib.h": "c"
     },
 
     "files.exclude": {

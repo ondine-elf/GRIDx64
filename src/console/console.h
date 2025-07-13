@@ -16,13 +16,13 @@ struct console_driver {
     void (*clear)(void);
     void (*scroll)(void);
     void (*putc)(char c);
-    void (*puts)(const char *str);
 };
 
-void console_init(int use_text_mode);
+int console_init(struct framebuffer *fb);
 void console_clear(void);
 void console_scroll(void);
 void console_putc(char c);
 void console_puts(const char *str);
+void console_printf(const char* fmt, ...);
 
 #endif
