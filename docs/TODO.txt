@@ -1,0 +1,2 @@
+- Implement a kernel logging system
+- Set up console with a way to verify the serial port
