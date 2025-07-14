@@ -1,5 +1,5 @@
-#ifndef TETOS_CONSOLE_H
-#define TETOS_CONSOLE_H
+#ifndef DRIVERS_CONSOLE_CONSOLE_H
+#define DRIVERS_CONSOLE_CONSOLE_H
 
 #include <stdint.h>
 

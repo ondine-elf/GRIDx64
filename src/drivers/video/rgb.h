@@ -1,5 +1,5 @@
-#ifndef CONSOLE_RGB_H
-#define CONSOLE_RGB_H
+#ifndef DRIVERS_CONSOLE_RGB_H
+#define DRIVERS_CONSOLE_RGB_H
 
 #include <stdint.h>
 

@@ -1,5 +1,5 @@
-#ifndef DRIVERS_I8259_H
-#define DRIVERS_I8259_H
+#ifndef DRIVERS_I8259_I8259_H
+#define DRIVERS_I8259_I8259_H
 
 #include <stdint.h>
 

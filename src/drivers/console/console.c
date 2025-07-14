@@ -10,7 +10,7 @@ static struct console_driver console_drv = {0};
 static void noop(void) {};
 
 int console_init() {
-    if (&fb == NULL) {
+    if (fb.addr == 0) {
         console_drv.clear = noop;
         console_drv.scroll = noop;
         console_drv.putc = noop;

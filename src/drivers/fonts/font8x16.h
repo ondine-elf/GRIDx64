@@ -1,8 +1,8 @@
 // Generated from /home/ondine/Downloads/cp850-8x16.psf
 // PSF v1 font, 256 glyphs, 16 bytes per glyph
 
-#ifndef FONT8X16_H
-#define FONT8X16_H
+#ifndef DRIVERS_FONTS_FONT8X16_H
+#define DRIVERS_FONTS_FONT8X16_H
 
 #define RGB_CHAR_HEIGHT   16
 #define RGB_CHAR_WIDTH    8
