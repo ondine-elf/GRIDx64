@@ -1,39 +1,45 @@
+#include <cpuid.h>
 #include <stdint.h>
+#include <tetos/io.h>
+#include <tetos/stdlib.h>
 #include <tetos/multiboot.h>
 #include "src/console/console.h"
-#include <tetos/stdlib.h>
 
-void print_memory_map(multiboot_info_t* mbi) {
-    if (!(mbi->flags & (1 << 6))) {
-        console_printf("No memory map provided by bootloader.\n");
-        return;
-    }
+#define MASTER_PIC_COMMAND 0x20
+#define MASTER_PIC_DATA    0x21
+#define SLAVE_PIC_COMMAND  0xA0
+#define SLAVE_PIC_DATA     0xA1
 
-    console_printf("Memory Map:\n");
+void pic_remap(int offset1, int offset2) {
+    outb(0x20, 0x11);
+    io_wait();
+    outb(0xA0, 0x11);
+    io_wait();
 
-    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mbi->mmap_addr;
-    uint32_t mmap_end = mbi->mmap_addr + mbi->mmap_length;
+    outb(0x21, offset1);
+    io_wait();
+    outb(0xA1, offset2);
+    io_wait();
 
-    while ((uint32_t)mmap < mmap_end) {
-        const char* type_str;
-        switch (mmap->type) {
-            case 1: type_str = "Available"; break;
-            case 2: type_str = "Reserved"; break;
-            case 3: type_str = "ACPI Reclaimable"; break;
-            case 4: type_str = "ACPI NVS"; break;
-            case 5: type_str = "Bad Memory"; break;
-            default: type_str = "Unknown"; break;
-        }
+    outb(0x21, 1 << 2);
+    io_wait();
+    outb(0xA1, 2);
+    io_wait();
 
-        console_printf("Base: 0x%08x%08x | Length: 0x%08x%08x | Type: %s\n",
-            (uint32_t)(mmap->addr >> 32), (uint32_t)(mmap->addr),
-            (uint32_t)(mmap->len >> 32), (uint32_t)(mmap->len),
-            type_str
-        );
+    outb(0x21, 1);
+    io_wait();
+    outb(0xA1, 1);
+    io_wait();
 
-        mmap = (multiboot_memory_map_t*)((uint32_t)mmap + mmap->size + sizeof(mmap->size));
-    }
+    outb(0x21, 0);
+    outb(0xA1, 0);
 }
+
+void pci_disable() {
+    outb(0x21, 0xff);
+    outb(0xA2, 0xff);
+}
+
 
 
 void kernel_main(uint32_t magic, uint32_t mbi_addr) {
@@ -47,12 +53,9 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
         fb.height = mbi->framebuffer_height;
         fb.bpp = mbi->framebuffer_bpp;
         fb.type = mbi->framebuffer_type;
-
-        if (console_init(&fb) == 0) {
-            
-            console_printf("Hello, world!\n");
-            print_memory_map(mbi);
-
-        }
     }
+
+    console_init(&fb);
+    console_puts("Hello, world!\n");
+
 }

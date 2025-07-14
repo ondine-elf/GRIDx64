@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// negative non decimal matches memory representation
 char *itoa(int value, char *str, int base) {
     char temp[33];
     int i = 0, j = 0;

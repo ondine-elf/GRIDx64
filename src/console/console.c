@@ -7,8 +7,17 @@
 
 static struct console_driver console_drv = {0};
 
+static void noop(void) {};
+
 int console_init(struct framebuffer *fb) {
-    if (fb->type == FB_TYPE_TEXT) {
+    if (fb == NULL) {
+        console_drv.clear = noop;
+        console_drv.scroll = noop;
+        console_drv.putc = noop;
+        console_drv.type = CONSOLE_TYPE_NONE;
+        return -1;
+    }
+    else if (fb->type == FB_TYPE_TEXT) {
         console_drv.type = CONSOLE_TYPE_TEXT;
         console_drv.clear = vga_clear;
         console_drv.scroll = vga_scroll;

@@ -1,0 +1,192 @@
+* Intel 64 and IA-32 Architectures Software Developer’s Manual, Volume 3 (System Programming Guide)
+  Pages: 813-814 (CPUID), 840-844 (CPUID features), 3464, 3469-3470 (APIC), 3470 (IA32\_APIC\_BASE MSR)
+
+QUESTIONS:
+	- "Note that when interrupts 0 through 15 are delivered through the
+	   local APIC, the APIC indicates the receipt of an illegal vector." [Page 3273]
+
+	- Section 7.4.2
+
+	- how to find apic and other shit from cpuid
+	- what cpus family are all these limited to?
+
+	- I think xapic is pretty much the same as apic...
+
+[Page 813]
+CPUID:
+	- Bit 21 in the EFLAGS register indicates support for the CPUID instruction. If a software procedure
+	  can set and clear this flag, the processor executing the procedure supports the CPUID instruction.
+	  This instruction operates the same in non-64-bit modes and 64-bit mode. [Page 813]
+
+	- CPUID returns processor identification and feature information in the EAX, EBX, ECX, and EDX registers.
+	  The instruction's output is dependent on the contents of the EAX register upon execution, and in some
+	  cases ECX as well. [Page 813]
+
+	- Information about the returned CPUID information based on the initial EAX value can be found on page 814.
+
+[Page 3464]
+APIC:
+	- The APIC receives interrupts from the processor's interrupts pins, from internal sources and
+	  from an external IOAPIC (or other external interrupt controller). It sends these to the processor
+	  core for handling. [Page 3464]
+
+	- When a local APIC has sent an interrupt to its processor core for handling, the processor
+	  uses the interrupt and exception handling mechanism described in Chapter 7. [Page 3464]
+
+	- The primary interrupt pins are the LINT[1:0] pins, which are connected to the local APIC.
+	  When the local APIC is enabled, the LINT[1:0] pins can be programmed through the APIC's
+	  local vector table (LVT) to be associated with any of the processor's exception or interrupt
+	  vectors. When the local APIC is global/hardware disabled, these pins are configured as INTR
+	  and NMI pins, respectively. Asserting the INTR pin signals the processor that an external
+	  interrupt has occurred. The processor reads from the system bus the interrupt vector number
+	  provided by an external interrupt controller, such as an 8259A. Asserting the NMI pin signals
+	  a non-maskable interrupt (NMI), which is assigned to interrupt vector 2. [Page 3271]
+
+	- Information about the 32 CPU exceptions and their vectors can be found on page 3272.
+
+	- Interrupts generated in software with the INT N instruction cannot be masked by the
+	  IF flag in the EFLAGS register, which permits all maskable hardware interrupts to be
+	  masked as a group. [Page 3273]
+
+	- Each local APIC consists of a set of APIC registers (Table 12-1) and associated hardware
+	  that control the delivery of interrupts to the processor core and the generation of IPI
+	  messages. The APIC registers are memory mapped and can be read and written to using the
+	  MOV instruction. [Page 3464]
+
+	# CHECK PROCESSOR FAMILIES
+	[Page 3464]
+	- Local APICs can receive interrupts from the following sources:
+	  - Locally connected IO devices: Interrupts originating as an edge or level
+	    asserted by an IO device that is connected directly to the processor's local
+		interrupt pins (LINT[1:0]). The IO devices may also be connected to an 8259-type
+		interrupt controller that is in turn connected to the processor through one of
+		the local interrupt pins.
+	  - Externally connected IO devices: Interrupts originating as an edge or level
+	    asserted by an IO device that is connected to the interrupt pins of an IO APIC.
+		Interrupts are sent as IO interrupt messages from the IO APIC to one or more of the
+		processors in the system.
+	  - Inter-processor interrupts (IPIs)
+	  - APIC timer generated interrupts
+	  - Performance monitoring counter interrupts
+	  - Thermal Sensor interrupts
+	  - APIC internal error interrupts
+
+	- Of the above sources, the processor's LINT0 and LINT1 pins, the APIC timer, the
+	  performance-monitoring counters, the thermal sensor, and the internal APIC error
+	  detector are referred to as local interrupt sources. Upon receiving a signal from
+	  a local interrupt source, the local APIC delivers the inerrupt to the processor core
+	  using an interrupt delivery protocol that has been set up through a group of APIC
+	  registers called the local vector table or LVT. [Page 3465]
+
+	- The local APIC handles interrupts from the other two interrupt sources (externally
+	  connected IO devices and IPIs) through its IPI message handling facilities. [Page 3465]
+
+	- Individual pins on the IOAPIC can be programmed to generate a specific interrupt vector
+	  when asserted. The IOAPIC also has a "virtual wire mode" that allows it to communicate
+	  with a standard 8259A-style external interrupt controller. Note that the local APIC
+	  can be disabled (Section 12.4.3), which allows the associated processor core to receive
+	  interrupts directly from an 8259A interrupt controller. [Page 3465]
+
+	- Software interacts with the local APIC by reading and writing its registers. APIC
+	  registers are memory-mapped to a 4-KByte region of the processor's physical address space
+	  with an initial starting address of 0xFEE00000. [Page 3467]
+
+	[Page 3467]
+	- On processors supporting x2APIC architecture (indicated by CPUID.01H:ECX[21] = 1), the
+	  local APIC supports operation both in xAPIC mode and (if enabled by software) in x2APIC mode.
+
+	- Information pertaining to the local APIC register map can be found on page 3469.
+
+	[Page 3471]
+	- The local APIC can be enabled or disabled in either of two ways:
+	  1: Using the global enable/disable flag in the IA32_APIC_BASE MSR (MSR address 0x1B)
+	       - When IA32_APIC_BASE[11] is 0, the processor is functionally equivalent to an IA-32
+	         processor without an on-chip APIC. The CPUID flag for the APIC is also set to 0.
+	       - When IA32_APIC_BASE[11] is set to 0, processor APICs based on the 3-wire APIC bus
+	         cannot be generally re-enabled until a system hardware reset.
+	  2: Using the APIC software enable/disable flag in the spurious-interrupt vector register.
+	       - If IA32_APIC_BASE[11] is 1, software can temporarily disable a local APIC at any
+		     time by clearing the APIC software enable/disable flag in the spurious-interrupt
+			 vector register. The state of the local APIC when in this software-disabled state
+			 is described in section 12.4.7.2
+		   - When the local APIC is in the software-disabled state, it can be re-enabled at any
+		     time by setting the APIC software enable/disable flag to 1.
+
+	- Note that each entry in the LVT has a mask bit that can be used to inhibit interrupts
+	  from being delivered to the processor from selected local interrupt sources. [Page 3471]
+
+	[Page 3471]
+	- The IA32_APIC_BASE_MSR is described as follows:
+	  - Is 64 bits wide
+	  - BSP flag, bit 8 : Indicates if the processor is the bootstrap processor
+	  - APIC Global Enable flag, bit 11 : Enables or disables the local APIC.
+	  - APIC Base field, bits 12 through 35 : Specifies the base address of the APIC
+	    registers. This 24-bit value is extended by 12 bits at the low end to form the
+		base address. This automatically aligns the address on a 4-KByte boundary. Following
+		a power-up or reset, the field is set to 0xFEE00000.
+
+	- The value returned by bits 24-31 of the EBX register when CPUID is executed with
+	  EAX = 1 is always the Initial APIC ID. This is true even if software has changed
+	  the value in the Local APID ID register, which it should avoid doing as support for
+	  this is model-specific. [Page 3472]
+
+	- For the P6 family and Pentium processors, the local APID ID field in the local APIC
+	  ID register is 4 bits. For the Pentium 4 and Intel Xeon processors, the xAPIC specification
+	  extends the local APIC ID field to 8 bits. [Page 3473]
+
+	- x2APIC will introduce 32-bit ID. See Section 12.12 [Page 3473]
+
+	[Page 3473]
+	- Following a power-up or reset of the processor, the state of the local APIC and its
+	  registers are as follows:
+	  - IRR, ISR, TMR, ICR, LDR, and TPR are set to 0
+	  - Timer intial count and timer current count are set to 0
+	  - Divide configuration register is set to 0
+	  - DFR is reset to all 1s
+	  - LVT is reset to 0s except for the mask bits; these are set to 1s
+	  - The spurious-interrupt register is initialized to 0x000000FF. By setting bit 8
+	    to 0, software disables the local APIC.
+
+	[Page 3473]
+	- When the APIC software enable/disable flag in the spurious-interrupt register has been
+	  explicitly cleared, the local APIC is temporarily disabled. The state is as follows:
+	  - The local APIC will respond normally to INIT, NMI, SMI, and SIPI messages
+	  - Pending interrupts in the IRR and ISR registers are held and require masking or handling
+	    by the CPU
+	  - The local APIC can still issues IPIs
+	  - The reception of any interrupt or transmission of any IPIs that are in progress when
+	    the local APIC is disabled are completing before the local APIC enters the disabled state
+	  - The mask bits for all the LVT entries are set. Attempts to reset these bits will be ignored.
+	
+	[Page 3475]
+	- The local vector table (LVT) allows software to specify the manner in which local interrupts
+	  are delivered to the processor core. It consists of the following 32-bit APIC registers, one
+	  for each local interrupt.
+	  - LVT CMCI register
+	  - LVT Timer register
+	  - LVT Thermal Monitor register (implementation specific)
+	  - LVT Performance Counter register (implementation specific)
+	  - LVT LINT0 register
+	  - LVT LINT1 register
+	  - LVT Error register
+
+	ADD STRUCTURE FOR LVT
+
+	- When an interrupt vector in the range of 0 to 16 is sent or received through the local
+	  APIC, the APIC indicates an illegal vector in its Error Status Register. The Intel 64
+	  and IA-32 architectures reserve vectors 16 through 31 for predefined interrupts, exceptions,
+	  and Intel-reserved encodings. However, the local APIC does not treat vectors in this range
+	  as illegal. [Page 3478]
+
+	- System software can place the local APIC in x2APIC mode by setting the x2APIC mode enable
+	  bit (bit 10) in the IA32_APIC_BASE_MSR. [Page 3500]
+
+	- See page 3500 for details on which APIC mode is active based on the IA32_APIC_BASE_MSR flags
+	
+	- 
+
+
+3500
+
+- WHEN IA32_APIC_BASE_MSR.ENABLE = 0, SO IS CPUID!!!
+- 

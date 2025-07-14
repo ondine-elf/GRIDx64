@@ -8,6 +8,7 @@ enum console_type {
     CONSOLE_TYPE_SERIAL = 0,
     CONSOLE_TYPE_TEXT   = 1,
     CONSOLE_TYPE_RGB    = 2,
+    CONSOLE_TYPE_NONE   = 3,
 };
 
 struct console_driver {
