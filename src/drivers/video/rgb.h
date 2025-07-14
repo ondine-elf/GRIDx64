@@ -7,8 +7,6 @@
 #define RGB_CHAR_WIDTH    8
 #define RGB_DEFAULT_COLOR 0xFFFFFFFF
 
-struct framebuffer;
-
 void rgb_scroll(void);
 
 void rgb_clear16(void);

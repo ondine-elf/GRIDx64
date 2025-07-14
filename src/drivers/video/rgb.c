@@ -1,9 +1,7 @@
 #include "rgb.h"
-#include "framebuffer.h"
-#include "font8x16.h"
+#include <drivers/video/framebuffer.h>
+#include <drivers/fonts/font8x16.h>
 #include <tetos/stdlib.h>
-
-struct framebuffer fb = {0};
 
 static uint32_t cursor_x = 0;
 static uint32_t cursor_y = 0;

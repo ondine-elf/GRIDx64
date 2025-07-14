@@ -2,7 +2,6 @@
 #define TETOS_CONSOLE_H
 
 #include <stdint.h>
-#include "framebuffer.h"
 
 enum console_type {
     CONSOLE_TYPE_SERIAL = 0,
@@ -19,7 +18,7 @@ struct console_driver {
     void (*putc)(char c);
 };
 
-int console_init(struct framebuffer *fb);
+int console_init();
 void console_clear(void);
 void console_scroll(void);
 void console_putc(char c);

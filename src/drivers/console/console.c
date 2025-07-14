@@ -1,31 +1,31 @@
-#include "vga.h"
-#include "rgb.h"
-#include "framebuffer.h"
-#include "console.h"
-#include <tetos/stdlib.h>
 #include <stdarg.h>
+#include <tetos/stdlib.h>
+#include <drivers/video/framebuffer.h>
+#include <drivers/video/rgb.h>
+#include "console.h"
+#include "vga.h"
 
 static struct console_driver console_drv = {0};
 
 static void noop(void) {};
 
-int console_init(struct framebuffer *fb) {
-    if (fb == NULL) {
+int console_init() {
+    if (&fb == NULL) {
         console_drv.clear = noop;
         console_drv.scroll = noop;
         console_drv.putc = noop;
         console_drv.type = CONSOLE_TYPE_NONE;
         return -1;
     }
-    else if (fb->type == FB_TYPE_TEXT) {
+    else if (fb.type == FB_TYPE_TEXT) {
         console_drv.type = CONSOLE_TYPE_TEXT;
         console_drv.clear = vga_clear;
         console_drv.scroll = vga_scroll;
         console_drv.putc = vga_putc;
         return 0;
-    } else if (fb->type == FB_TYPE_RGB) {
+    } else if (fb.type == FB_TYPE_RGB) {
         console_drv.type = CONSOLE_TYPE_RGB;
-        switch (fb->bpp) {
+        switch (fb.bpp) {
             case 16: {
                 console_drv.clear = rgb_clear16;
                 console_drv.scroll = rgb_scroll;

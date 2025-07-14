@@ -4,6 +4,7 @@
 #include <tetos/stdlib.h>
 #include <tetos/multiboot.h>
 #include <drivers/console/console.h>
+#include <drivers/video/framebuffer.h>
 
 void kernel_main(uint32_t magic, uint32_t mbi_addr) {
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) return;
@@ -18,6 +19,6 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
         fb.type = mbi->framebuffer_type;
     }
 
-    console_init(&fb);
+    console_init();
     console_puts("Hello, world!\n");
 }
