@@ -3,44 +3,7 @@
 #include <tetos/io.h>
 #include <tetos/stdlib.h>
 #include <tetos/multiboot.h>
-#include "src/console/console.h"
-
-#define MASTER_PIC_COMMAND 0x20
-#define MASTER_PIC_DATA    0x21
-#define SLAVE_PIC_COMMAND  0xA0
-#define SLAVE_PIC_DATA     0xA1
-
-void pic_remap(int offset1, int offset2) {
-    outb(0x20, 0x11);
-    io_wait();
-    outb(0xA0, 0x11);
-    io_wait();
-
-    outb(0x21, offset1);
-    io_wait();
-    outb(0xA1, offset2);
-    io_wait();
-
-    outb(0x21, 1 << 2);
-    io_wait();
-    outb(0xA1, 2);
-    io_wait();
-
-    outb(0x21, 1);
-    io_wait();
-    outb(0xA1, 1);
-    io_wait();
-
-    outb(0x21, 0);
-    outb(0xA1, 0);
-}
-
-void pci_disable() {
-    outb(0x21, 0xff);
-    outb(0xA2, 0xff);
-}
-
-
+#include <drivers/console/console.h>
 
 void kernel_main(uint32_t magic, uint32_t mbi_addr) {
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) return;
@@ -57,5 +20,4 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
 
     console_init(&fb);
     console_puts("Hello, world!\n");
-
 }
