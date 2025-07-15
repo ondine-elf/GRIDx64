@@ -1,5 +1,8 @@
 # TETOS-I386
 A 32-bit hobby operating system
 
-- "fb", the system framebuffer, is declared in src/console/frambuffer.h
-- 
+# TODO
+- [] Task 1: Implement malloc()
+- [] Task 2: Parse ACPI tables for relevant information and store
+- [] Task 3: Store memory map in global system state struct
+- [] Task 4: Discover PCI / PCIe devices and store

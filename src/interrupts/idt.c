@@ -26,7 +26,6 @@ void idt_install(void) {
         idt_set_gate(i, isr_table[i], 0x8E);
 
     asm volatile ("lidt %0" : : "m" (idtp));
-    asm volatile ("sti");
 }
 
 void exception_handler(uint32_t vector, uint32_t error_code) {
