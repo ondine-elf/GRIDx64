@@ -169,3 +169,5 @@ struct DSDT {
 } __attribute__((packed));
 
 #endif
+
+// MULTIPLE APIC FLAGS TELL YOU IF DUAL PICS ARE THERE!!!

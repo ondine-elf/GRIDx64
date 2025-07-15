@@ -23,14 +23,6 @@ void decode_gpf_error(uint32_t code) {
 
 #include <acpi/acpi.h>
 
-struct ACPI {
-    struct RSDP      *rsdp;
-    struct SDTHeader *rsdt;
-    struct SDTHeader *facp;
-    struct SDTHeader *apic;
-    struct SDTHeader *hpet;
-} __attribute__((packed));
-
 void kernel_main(uint32_t magic, uint32_t mbi_addr) {
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) return;
     multiboot_info_t* mbi = (multiboot_info_t *)mbi_addr;
@@ -69,6 +61,11 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
         }
     }
 
+    if (!rsdp) {
+        console_printf("No RSDP found. Aborting.\n");
+        return;
+    }
+
     uint8_t checksum = 0;
     for (size_t i = 0; i < 20; i++)
         checksum += ((uint8_t *)rsdp)[i];
@@ -82,9 +79,6 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
         char sig[5] = {0};
         memmove(sig, header->Signature, 4);
         console_printf("ACPI: %s 0x%08x\n", sig, (uint32_t)header);
-
-        
-
     }
 
     while (1);
