@@ -162,12 +162,114 @@ struct FADT {
 #define FADT_PWR_PROFILE_APPLIANCE_PC       6
 #define FADT_PWR_PROFILE_PERFORMANCE_SERVER 7
 
-
-struct DSDT {
+struct MADT {
     struct SDTHeader Header;
-    uint8_t DefinitionBlock[];
+    uint32_t         LAPICAddress;
+    uint32_t         Flags;
+    uint8_t          Entries[];
+} __attribute__((packed));
+
+// Indicates dual 8259 support. They must be disabled (masked) when
+// enabling APIC operation.
+#define MADT_PCAT_COMPAT (1 << 0)
+
+struct madt_entry_header {
+    uint8_t type;
+    uint8_t length;
+} __attribute__((packed));
+
+struct madt_lapic {
+    struct madt_entry_header header;
+    uint8_t                  processor_id;
+    uint8_t                  apic_id;
+    uint32_t                 flags;
+} __attribute__((packed));
+
+#define MADT_LAPIC_ENABLED        (1 << 0)
+#define MADT_LAPIC_ONLINE_ENABLED (1 << 1)
+
+struct madt_ioapic {
+    struct madt_entry_header header;
+    uint8_t                  ioapic_id;
+    uint8_t                  reserved;
+    uint32_t                 ioapic_address;
+    uint32_t                 global_irq_base;
 } __attribute__((packed));
 
 #endif
 
-// MULTIPLE APIC FLAGS TELL YOU IF DUAL PICS ARE THERE!!!
+/*
+[Page 3465]
+The IOAPIC has a "virtual wire mode" that allows it to communicate with a standard 8259A-style
+external interrupt controller. Note that the local APIC can be disabled, allowing an associated
+processor core to receive interrupts directly from an 8259A interrupt controller.
+
+[Page 3473]
+The local APIC state after power-up or reset:
+    - IRR, ISR, TMR, ICR, LDR, TPR = 0
+    - Timer initial count and timer current count = 0
+    - Divide configuration = 0
+
+    - DRF = all 1s
+    - LVT = 0s except for mask bits, which are 1
+    - SVR = 0x000000FF
+
+[Page 3473]
+The local APIC state after it has been software-disabled:
+    - It will respond normally to INIT, NMI, SMI, and SIPI message.
+    - Pending interrupts in the IRR and ISR are held and require masking
+      or handling by the CPU.
+
+    - It can still issue IPIs, although it is the software's responsibility
+      to avoid issuing IPIs through the IPI mechanism and the ICR register
+      if sending interrupts through this mechanism is not desired.
+
+    - The reception of any interrupt or transmission of any IPIs that are
+      in progress when the local APIC is disabled are completed before
+      the local APIC enters the software-disabled state.
+
+    - The mask bits for all the LVT entries are set. Attempts to reset these
+      bits will be ignored.
+
+[Page 3471]
+Enabling and disabling the local APIC:
+    - The local APIC can be disabled by setting IA32_APIC_BASE[11] = 0. Upon
+      this, the processor is functionally equivalent to an IA-32 processor
+      without an on-chip APIC, and the CPUID feature flag for the APIC is set
+      to 0. APICs based on the 3-wire APIC bus cannot be re-enabled until a
+      system hardware reset, and prior initialization to the APIC may be lost
+      and the APIC may return to the state described in Section 12.4.7.1,
+      "Local APIC state after power-up or reset."
+
+    - The local APIC can be software-disabled by clearing the APIC software
+      enable/disable flag in the spurious-interrupt vector register, upon
+      which the APIC's state is described in section 12.4.7.2, "Local APIC
+      state after it has been software-disabled." The APIC can be re-enabled
+      at any time by setting the APIC software enable/disable flag to 1.
+
+[Page 3471]
+IA32_APIC_BASE MSR structure:
+    - BSP flag, bit 8: Indicates if the processor is the bootstrap processor
+    - APIC Global Enable flag, bit 11: Enables or disables the local APIC. This
+      flag is available in the Pentium 4, Intel Xeon, and P6 family processors. It
+      is not guaranteed to be available or available at the same location in future
+      Intel 64 or IA-32 processors.
+    
+    - APIC Base field, bits 12 through 35: Specifies the base address of the APIC
+      registers. This 24-bit value is extended by 12 bits at the low end to form
+      the base address. This automatically aligns the address on a 4-KByte boundary.
+      Following a power-up or reset, the field is set to 0xFEE00000
+
+[Page 3466]
+PIC 8259 compatibility:
+    - The IOAPIC has a "virtual wire mode" that allows it to communicate
+      with a standard 8259A-style external interrupt controller.
+    - The local APIC can be disabled, allowing an associated processor core
+      to receive interrupts directly from an 8259A controller.
+    - When the local APIC is global/hardware disabled, the LINT[1:0] pins are configured
+      as INTR and NMI pins, respectively. The processor reads from the system
+      bus the interrupt vector number provided by an external interrupt controller,
+      such as an 8259A. Asserting the NMI pin signals a non-maskable interrupt, which
+      is assigned to interrupt vector 2.
+
+*/

@@ -1,5 +1,3 @@
-#include <./config.h>
-
 .set ALIGN,   1 << 0
 .set MEMINFO, 1 << 1
 .set VIDINFO, 1 << 2
@@ -19,17 +17,10 @@
     .long 0
     .long 0
 
-#ifdef GRAPHICS_MODE
     .long 0
     .long 1024
     .long 768
     .long 32
-#else
-    .long 1
-    .long 80
-    .long 25
-    .long 0
-#endif
 
 .section .bss
 .align 16
@@ -53,6 +44,7 @@ gdt_descriptor:
 .extern kernel_main
 .type _start, @function
 _start:
+
     mov $stack_top, %esp
 
     lgdt gdt_descriptor

@@ -40,6 +40,7 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
 
     pic_remap(0x20, 0x28);
     pic_set_mask(0);
+    pic_clear_mask(1);
     idt_install();
     asm volatile ("sti");
 
@@ -62,24 +63,57 @@ void kernel_main(uint32_t magic, uint32_t mbi_addr) {
     }
 
     if (!rsdp) {
-        console_printf("No RSDP found. Aborting.\n");
-        return;
+        console_printf("WARN: No RSDP found.\n");
+    } else {
+        uint8_t checksum = 0;
+        for (size_t i = 0; i < 20; i++)
+            checksum += ((uint8_t *)rsdp)[i];
+    
+        if (checksum) console_printf("ERROR! Checksum not valid.\n");
+    
+        struct RSDT *rsdt = (struct RSDT *)rsdp->RsdtAddress;
+        int numEntries = (rsdt->Header.Length - 36) / 4;
+        for (int i = 0; i < numEntries; i++) {
+            struct SDTHeader *header = (struct SDTHeader *)rsdt->Entries[i];
+            char sig[5] = {0};
+            memmove(sig, header->Signature, 4);
+            console_printf("ACPI: %s 0x%08x\n", sig, (uint32_t)header);
+        }
     }
 
-    uint8_t checksum = 0;
-    for (size_t i = 0; i < 20; i++)
-        checksum += ((uint8_t *)rsdp)[i];
+    unsigned int eax, ebx, ecx, edx;
+    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
+        if (edx & (1 << 9)) {
+            console_printf("CPUID: APIC supported detected\n");
 
-    if (checksum) console_printf("ERROR! Checksum not valid.\n");
+            uint64_t msr = rdmsr(0x1B);
+            if (msr & (1 << 11)) console_printf("ACPI: APIC enabled\n");
 
-    struct RSDT *rsdt = (struct RSDT *)rsdp->RsdtAddress;
-    int numEntries = (rsdt->Header.Length - 36) / 4;
-    for (int i = 0; i < numEntries; i++) {
-        struct SDTHeader *header = (struct SDTHeader *)rsdt->Entries[i];
-        char sig[5] = {0};
-        memmove(sig, header->Signature, 4);
-        console_printf("ACPI: %s 0x%08x\n", sig, (uint32_t)header);
+            volatile uint32_t *lapic = (volatile uint32_t *)0xFEE00000;
+            uint32_t lint0 = lapic[0x350 / 4];
+            uint32_t delivery_mode = (lint0 >> 8) & 0x7;
+            if (delivery_mode == 0x7)
+                console_printf("LAPIC LINT0 is configured as ExtINT\n");
+            else
+                console_printf("LAPIC LINT0 delivery mode: %d\n", delivery_mode);
+        }
     }
 
-    while (1);
+    while (1) {
+        //int x = 1 / 0;
+        //console_printf("%d\n", x);
+        //break;
+    }
 }
+
+// APIC enabled & LINT0 ExtINT: Keyboard works as long as IRQ 1 is unmasked via 8259
+// APIC enabled & LINT0 masked: Keyboard will NOT work
+// APIC disabled & LINT0 ExtINT: Keyboard works as long as IRQ 1 is unmasked via 8259
+// APIC disabled & LINT0 masked: Keyboard will NOT work
+// APIC enabled & changed delivery mode for LINT0: Keyboard will NOT work
+// APIC disabled & changed delivery mode for LINT0: Keyboard will NOT work. Why??????
+
+/*
+* - Trying to use IRQs in BIOS without remapping the PIC will cause a fault
+* - 
+*/
