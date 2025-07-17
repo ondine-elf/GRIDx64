@@ -31,7 +31,7 @@ OBJECTS := $(ASM_OBJECTS) $(C_OBJECTS)
 all: $(KERNEL_ELF) $(ISO_IMAGE)
 
 run: $(ISO_IMAGE)
-	qemu-system-x86_64 -cdrom $(ISO_IMAGE) -m 4G -smp 10 -bios /usr/share/ovmf/OVMF.fd -serial stdio -s -S
+	qemu-system-x86_64 -cdrom $(ISO_IMAGE) -m 4G -smp 10 -bios /usr/share/ovmf/OVMF.fd -serial stdio
 
 $(ISO_IMAGE): $(KERNEL_ELF)
 	cp $(KERNEL_ELF) $(ISO_DIR)/boot/kernel.elf
