@@ -9,7 +9,7 @@ OBJ_DIR   := $(BUILD_DIR)/obj
 BIN_DIR   := $(BUILD_DIR)/bin
 
 ISO_DIR := iso
-ISO_IMAGE := $(BIN_DIR)/TETOS_I386.iso
+ISO_IMAGE := $(BIN_DIR)/GRIDx64.iso
 
 INCLUDE_DIRS := include
 
