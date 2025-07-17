@@ -1,3 +1,4 @@
+/*
 #include "idt.h"
 #include <drivers/console/console.h>
 #include <drivers/i8259/i8259.h>
@@ -37,5 +38,5 @@ void exception_handler(uint32_t vector, uint32_t error_code) {
         pic_send_eoi(1);
     }
 }
-
+*/
 // 8f or 8e?

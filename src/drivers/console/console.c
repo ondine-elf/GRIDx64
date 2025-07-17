@@ -9,6 +9,7 @@ static struct console_driver console_drv = {0};
 
 static void noop(void) {};
 
+// Need to fix and make more robust! YOU CAN'T NOT ASSIGN THE FUNCTIONS!!!
 int console_init() {
     if (fb.addr == 0) {
         console_drv.clear = noop;
@@ -23,7 +24,7 @@ int console_init() {
         console_drv.scroll = vga_scroll;
         console_drv.putc = vga_putc;
         return 0;
-    } else if (fb.type == FB_TYPE_RGB) {
+    } else if (fb.type == FB_TYPE_RGB || fb.type == 8) { // The 8 for Multiboot 2 UEFI. You need to add a config for this.
         console_drv.type = CONSOLE_TYPE_RGB;
         switch (fb.bpp) {
             case 16: {

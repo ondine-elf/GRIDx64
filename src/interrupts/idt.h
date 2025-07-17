@@ -1,3 +1,4 @@
+/*
 #ifndef INTERRUPTS_IDT_H
 #define INTERRUPTS_IDT_H
 
@@ -23,3 +24,5 @@ void idt_install(void);
 void exception_handler(uint32_t vector, uint32_t error_code);
 
 #endif
+
+*/

@@ -1,7 +1,7 @@
 
-AS := i686-elf-gcc
-CC := i686-elf-gcc
-LD := i686-elf-gcc
+AS := x86_64-elf-gcc
+CC := x86_64-elf-gcc
+LD := x86_64-elf-gcc
 
 SRC_DIR   := src
 BUILD_DIR := build
@@ -16,9 +16,9 @@ INCLUDE_DIRS := include
 LINKER_SCRIPT := linker.ld
 KERNEL_ELF    := $(BIN_DIR)/kernel.elf
 
-ASFLAGS := -ffreestanding -nostdlib -I$(INCLUDE_DIRS) -Isrc
-CFLAGS  := -ffreestanding -nostdlib -O2 -Wall -Wextra -I$(INCLUDE_DIRS) -Isrc
-LDFLAGS := -ffreestanding -nostdlib -T$(LINKER_SCRIPT)
+ASFLAGS := -ffreestanding -nostdlib -I$(INCLUDE_DIRS) -Isrc -g -O0
+CFLAGS  := -ffreestanding -nostdlib -O2 -Wall -Wextra -I$(INCLUDE_DIRS) -Isrc -g -O0
+LDFLAGS := -ffreestanding -nostdlib -T$(LINKER_SCRIPT) -g -O0
 
 ASM_SOURCES := $(shell find $(SRC_DIR) -name '*.S')
 C_SOURCES   := $(shell find $(SRC_DIR) -name '*.c')
@@ -31,7 +31,7 @@ OBJECTS := $(ASM_OBJECTS) $(C_OBJECTS)
 all: $(KERNEL_ELF) $(ISO_IMAGE)
 
 run: $(ISO_IMAGE)
-	qemu-system-x86_64 -cdrom $(ISO_IMAGE) -m 4G -smp 10 -bios /usr/share/ovmf/OVMF.fd
+	qemu-system-x86_64 -cdrom $(ISO_IMAGE) -m 4G -smp 10 -bios /usr/share/ovmf/OVMF.fd -serial stdio -s -S
 
 $(ISO_IMAGE): $(KERNEL_ELF)
 	cp $(KERNEL_ELF) $(ISO_DIR)/boot/kernel.elf

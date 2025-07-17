@@ -1,3 +1,4 @@
+/*
 .macro ISR_ERR n
 .global isr\n
 .type isr\n, @function
@@ -125,3 +126,5 @@ isr_table:
     .long isr45
     .long isr46
     .long isr47
+
+*/
