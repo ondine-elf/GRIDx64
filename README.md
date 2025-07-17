@@ -8,6 +8,8 @@ A 64-bit hobby operating system
 - [] Detect and store ACPI tables alongside other system information
 - [] Create a heap and dynamic memory allocation techniques
 - [] Add macros to customize compilation for different firmwares and architectures
+- [] Create a function that will decode error codes from CPU exceptions and display
+     them in a human readable format
 
 # NOTES
 - Grub 2 with Multiboot 2 will likely fail to boot if you don't align your tags to 8 bytes.

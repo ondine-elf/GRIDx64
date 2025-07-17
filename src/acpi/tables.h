@@ -2,8 +2,8 @@
 #define ACPI_ACPI_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-/* Used to express register address within tables defined by ACPI */
 struct GenericAddress {
     uint8_t  AddressSpaceID;
     uint8_t  RegisterBitWidth;
@@ -12,19 +12,6 @@ struct GenericAddress {
     uint64_t Address;
 } __attribute__((packed));
 
-/*
-* On IA-PC systems, the Root System Description Pointer (RSDP)
-* is found by searching physical memory ranges on 16-byte boundaries
-* for a valid RSDP structure signature and checksum match
-* as follows:
-*
-* - The first 1 KB of the EBDA. For EISA or MCA systems, the EBDA
-*   can be found in the two-byte location 40:0E on the BIOS data area.
-*
-* - The BIOS read-only memory space between 0xE0000 and 0xFFFFF.
-*
-* In UEFI systems, a pointer to the RSDP exists within the EFI System Table.
-*/
 struct RSDP {
     char     Signature[8];
     uint8_t  Checksum;
@@ -39,12 +26,6 @@ struct RSDP {
     uint8_t  Reserved[3];
 } __attribute__((packed));
 
-
-/*
-* All system description tables begin with the following header structure.
-* For a list of valid description header signatures, see Tables 5.5 and 5.6
-* in the ACPI 6.6 specification.
-*/
 struct SDTHeader {
     char     Signature[4];
     uint32_t Length;
@@ -57,28 +38,16 @@ struct SDTHeader {
     uint32_t CreatorRevision;
 } __attribute__((packed));
 
-/*
-* The "Entries" field is an array of 32-bit physical addresses that
-* point to other table description headers.
-*/
 struct RSDT {
     struct SDTHeader Header;
     uint32_t Entries[];
 } __attribute__((packed));
 
-/*
-* The "Entries" field is an array of 64-bit physical addresses that
-* point to other table description headers.
-*/
 struct XSDT {
     struct SDTHeader Header;
     uint64_t Entries[];
 } __attribute__((packed));
 
-/*
- * Fixed ACPI Description Table (FADT / FACP). See the "BootArchitectureFlags"
- * for relevant fields relating to legacy hardware, the RTC, MSI, etc.
- */
 struct FADT {
     struct   SDTHeader Header;
     uint32_t FirmwareCtrl;
@@ -164,13 +133,12 @@ struct FADT {
 
 struct MADT {
     struct SDTHeader Header;
-    uint32_t         LAPICAddress;
-    uint32_t         Flags;
-    uint8_t          Entries[];
+    uint32_t LAPICAddress;
+    uint32_t Flags;
+    uint8_t  Entries[];
 } __attribute__((packed));
 
-// Indicates dual 8259 support. They must be disabled (masked) when
-// enabling APIC operation.
+// Indicates dual 8259 support. They must be disabled (masked) when enabling APIC operation.
 #define MADT_PCAT_COMPAT (1 << 0)
 
 struct madt_entry_header {
@@ -180,9 +148,9 @@ struct madt_entry_header {
 
 struct madt_lapic {
     struct madt_entry_header header;
-    uint8_t                  processor_id;
-    uint8_t                  apic_id;
-    uint32_t                 flags;
+    uint8_t  processor_id;
+    uint8_t  apic_id;
+    uint32_t flags;
 } __attribute__((packed));
 
 #define MADT_LAPIC_ENABLED        (1 << 0)
@@ -190,10 +158,10 @@ struct madt_lapic {
 
 struct madt_ioapic {
     struct madt_entry_header header;
-    uint8_t                  ioapic_id;
-    uint8_t                  reserved;
-    uint32_t                 ioapic_address;
-    uint32_t                 global_irq_base;
+    uint8_t  ioapic_id;
+    uint8_t  reserved;
+    uint32_t ioapic_address;
+    uint32_t global_irq_base;
 } __attribute__((packed));
 
 #endif
