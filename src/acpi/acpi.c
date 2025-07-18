@@ -17,6 +17,8 @@ bool checksum_valid(const void *addr, size_t len) {
     return sum == 0;
 }
 
+// This returns the first value by default you fat STUPID IDIOT!!!! YOU JUST RETURNED
+// THE FIRST ONE!!!
 struct RSDP *find_rsdp(EFI_SYSTEM_TABLE *system_table) {
     if (system_table == NULL)
         return NULL;
@@ -34,7 +36,7 @@ struct RSDP *find_rsdp(EFI_SYSTEM_TABLE *system_table) {
 
             if (rsdp->Revision >= 2) {
                 if (checksum_valid(rsdp, rsdp->Length))
-                    return rsdp;
+                return rsdp;
             } else {
                 if (checksum_valid(rsdp, 20))
                     return rsdp;

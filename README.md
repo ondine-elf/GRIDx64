@@ -11,6 +11,7 @@ A 64-bit hobby operating system
 - [] Create a function that will decode error codes from CPU exceptions and display
      them in a human readable format
 - [] YOU HAVE TO FIX CONSLE_PRINTF TO ACCOUNT FOR UNSIGNED INTEGERS!!!
+- [] YOU NEED TO FIX RIND_RSDP() BECAUSE YOU'RE DEFAULTING TO ACPI 1.0!!!
 
 # NOTES
 - Grub 2 with Multiboot 2 will likely fail to boot if you don't align your tags to 8 bytes.
