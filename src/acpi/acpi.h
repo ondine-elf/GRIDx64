@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <efi/efi.h>
 
 struct GenericAddress {
     uint8_t  AddressSpaceID;
@@ -138,7 +140,7 @@ struct MADT {
     uint8_t  Entries[];
 } __attribute__((packed));
 
-// Indicates dual 8259 support. They must be disabled (masked) when enabling APIC operation.
+// Indicates dual 8259 support.
 #define MADT_PCAT_COMPAT (1 << 0)
 
 struct madt_entry_header {
@@ -163,6 +165,31 @@ struct madt_ioapic {
     uint32_t ioapic_address;
     uint32_t global_irq_base;
 } __attribute__((packed));
+
+bool checksum_valid(const void *addr, size_t len);
+struct RSDP *find_rsdp(EFI_SYSTEM_TABLE *system_table);
+void *find_acpi_table(const struct RSDP *rsdp, const char *signature);
+void acpi_init(EFI_SYSTEM_TABLE *system_table);
+
+struct ACPIInfo {
+	struct RSDP *rsdp;
+	struct RSDT *rsdt;
+	struct XSDT *xsdt;
+	struct FADT *fadt;
+	struct MADT *madt;
+
+	bool has_apic;
+	bool apic_enabled;
+
+	bool has_i8042;
+	bool has_vga;
+	bool has_8259;
+
+	int numCores;
+	int numEntries;
+};
+
+extern struct ACPIInfo acpi_info;
 
 #endif
 

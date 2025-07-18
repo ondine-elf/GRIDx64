@@ -33,6 +33,9 @@ all: $(KERNEL_ELF) $(ISO_IMAGE)
 run: $(ISO_IMAGE)
 	qemu-system-x86_64 -cdrom $(ISO_IMAGE) -m 4G -smp 10 -bios /usr/share/ovmf/OVMF.fd -serial stdio
 
+install: $(ISO_IMAGE)
+	sudo dd if=$(ISO_IMAGE) of=/dev/sdb bs=512 conv=notrunc && sync
+
 $(ISO_IMAGE): $(KERNEL_ELF)
 	cp $(KERNEL_ELF) $(ISO_DIR)/boot/kernel.elf
 	grub-mkrescue $(ISO_DIR) -o $(ISO_IMAGE)
