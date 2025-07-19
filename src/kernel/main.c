@@ -13,6 +13,15 @@
 #include <efi/efi.h>
 #include <efi/efilib.h>
 
+typedef struct {
+    uint64_t FrameBufferBase;
+    uint32_t Width;
+    uint32_t Height;
+    uint32_t PixelsPerScanLine;
+
+    void *system_table;
+} boot_info_t;
+
 static inline void serial_print(const char *str) {
     while (*str) outb(0x3F8, *str++);
 }
