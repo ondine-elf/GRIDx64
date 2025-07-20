@@ -22,8 +22,8 @@ typedef struct {
     VOID  *SystemTable;
 
     VOID  *MemoryMap;
-    UINTN MemoryMapSize;
-    UINTN DescriptorSize;
+    UINTN  MemoryMapSize;
+    UINTN  DescriptorSize;
     UINT32 DescriptorVersion;
 } boot_info_t;
 

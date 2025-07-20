@@ -35,7 +35,6 @@ $(EFI_IMG): $(EFI_BOOT) $(KERNEL)
 	@sudo mcopy -i $@ $(EFI_BOOT) ::/EFI/BOOT/BOOTX64.EFI
 	@sudo mcopy -i $@ $(KERNEL) ::/kernel.elf
 
-
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.S
 	@mkdir -p $(dir $@)
 	@echo "  AS      $<"
