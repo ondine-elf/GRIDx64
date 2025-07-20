@@ -7,14 +7,16 @@
 
 static struct console_driver console_drv = {0};
 
-static void noop(void) {};
+static void noop_clear(void) {};
+static void noop_scroll(void) {};
+static void noop_putc(char c) {};
 
 // Need to fix and make more robust! YOU CAN'T NOT ASSIGN THE FUNCTIONS!!!
 int console_init() {
     if (fb.addr == 0) {
-        console_drv.clear = noop;
-        console_drv.scroll = noop;
-        console_drv.putc = noop;
+        console_drv.clear = noop_clear;
+        console_drv.scroll = noop_scroll;
+        console_drv.putc = noop_putc;
         console_drv.type = CONSOLE_TYPE_NONE;
         return -1;
     }

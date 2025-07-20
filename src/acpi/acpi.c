@@ -116,7 +116,7 @@ void acpi_init(EFI_SYSTEM_TABLE *system_table) {
     while (ptr < end) {
         struct madt_entry_header *header = (struct madt_entry_header *)ptr;
         if (header->type == 0) {
-            struct madt_lapic *lapic = header;
+            struct madt_lapic *lapic = (struct madt_lapic *)header;
             if (lapic->flags & MADT_LAPIC_ENABLED)
                 acpi_info.numCores++;
         }
@@ -127,7 +127,7 @@ void acpi_init(EFI_SYSTEM_TABLE *system_table) {
     if (acpi_info.rsdp->Revision <= 1) {
         acpi_info.numEntries = (acpi_info.rsdt->Header.Length - sizeof(acpi_info.rsdt->Header)) / sizeof(uint32_t);
         for (int i = 0; i < acpi_info.numEntries; i++) {
-            struct SDTHeader *header = (struct SDTHeader *)acpi_info.rsdt->Entries[i];
+            struct SDTHeader *header = (struct SDTHeader *)(uintptr_t)acpi_info.rsdt->Entries[i];
             char signature[5] = {0};
             memmove(signature, header->Signature, 4);
             console_printf("ACPI: %s 0x%08x - 0x%08x\n", signature, (uintptr_t)header, (uintptr_t)header + header->Length);

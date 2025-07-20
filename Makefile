@@ -1,66 +1,58 @@
-
-AS := x86_64-elf-gcc
-CC := x86_64-elf-gcc
-LD := x86_64-elf-gcc
-
 SRC_DIR   := src
 BUILD_DIR := build
 OBJ_DIR   := $(BUILD_DIR)/obj
 BIN_DIR   := $(BUILD_DIR)/bin
+LD_SCRIPT := linker.ld
 
-ISO_DIR := iso
-ISO_IMAGE := $(BIN_DIR)/GRIDx64.iso
+KERNEL := $(BIN_DIR)/kernel.elf
 
-INCLUDE_DIRS := include
+EFI_BOOT := /home/ondine/src/edk2/Grid/build/Grid.efi
+EFI_IMG  := $(BUILD_DIR)/uefi.img
 
-LINKER_SCRIPT := linker.ld
-KERNEL_ELF    := $(BIN_DIR)/kernel.elf
-
-ASFLAGS := -ffreestanding -nostdlib -I$(INCLUDE_DIRS) -Isrc -g -O0 -mno-red-zone -mcmodel=large
-CFLAGS  := -ffreestanding -nostdlib -O2 -Wall -Wextra -I$(INCLUDE_DIRS) -Isrc -g -O0 -mno-red-zone -mcmodel=large
-LDFLAGS := -ffreestanding -nostdlib -T$(LINKER_SCRIPT) -g -O0 -mno-red-zone -mcmodel=large
+CC     := /home/ondine/opt/cross/bin/x86_64-elf-gcc
+CFLAGS := -ffreestanding -nostdlib -Isrc -Iinclude -O2 -mno-red-zone -mcmodel=large -g
 
 ASM_SOURCES := $(shell find $(SRC_DIR) -name '*.S')
 C_SOURCES   := $(shell find $(SRC_DIR) -name '*.c')
 
 ASM_OBJECTS := $(patsubst $(SRC_DIR)/%.S, $(OBJ_DIR)/%.o, $(ASM_SOURCES))
 C_OBJECTS   := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(C_SOURCES))
+OBJECTS     := $(ASM_OBJECTS) $(C_OBJECTS)
 
-OBJECTS := $(ASM_OBJECTS) $(C_OBJECTS)
+.PHONY: all clean run
 
-all: $(KERNEL_ELF) $(ISO_IMAGE)
+all: $(EFI_IMG)
 
-run: $(ISO_IMAGE)
-	qemu-system-x86_64 -cdrom $(ISO_IMAGE) -m 4G -smp 10 -bios /usr/share/ovmf/OVMF.fd -serial stdio
+run: $(EFI_IMG)
+	qemu-system-x86_64 -m 16G -smp 10 -drive file=$<,format=raw -bios /usr/share/ovmf/OVMF.fd
 
-install: $(ISO_IMAGE)
-	sudo dd if=$(ISO_IMAGE) of=/dev/sdb bs=512 conv=notrunc && sync
+$(EFI_IMG): $(EFI_BOOT) $(KERNEL)
+	@echo "  IMG     $@"
+	@sudo dd if=/dev/zero of=$@ bs=1M count=64 status=none
+	@sudo mformat -i $@ -F -v EFIIMG ::
+	@sudo mmd -i $@ ::/EFI
+	@sudo mmd -i $@ ::/EFI/BOOT
+	@sudo mcopy -i $@ $(EFI_BOOT) ::/EFI/BOOT/BOOTX64.EFI
+	@sudo mcopy -i $@ $(KERNEL) ::/kernel.elf
 
-$(ISO_IMAGE): $(KERNEL_ELF)
-	cp $(KERNEL_ELF) $(ISO_DIR)/boot/kernel.elf
-	grub-mkrescue $(ISO_DIR) -o $(ISO_IMAGE)
 
-$(KERNEL_ELF): $(OBJECTS) | $(BIN_DIR)
-	$(LD) $(LDFLAGS) $^ -o $@
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.S | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.S
 	@mkdir -p $(dir $@)
-	$(AS) $(ASFLAGS) -I$(dir $<) -c $< -o $@
+	@echo "  AS      $<"
+	@$(CC) $(ASFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(dir $<) -c $< -o $@
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+	@echo "  CC      $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+	@mkdir -p $@
+
+$(KERNEL): $(OBJECTS) | $(BIN_DIR)
+	@echo "  LD      $@"
+	@$(CC) $(CFLAGS) -T $(LD_SCRIPT) $^ -o $@
 
 clean:
-	rm -rf $(BUILD_DIR) $(ISO_DIR)/boot/kernel.elf
-
-.PHONY: all clean
-
-
-
+	@echo "Cleaning..."
+	@rm -rf $(BUILD_DIR)
