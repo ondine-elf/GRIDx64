@@ -2,30 +2,14 @@
 #include <stdint.h>
 #include <tetos/io.h>
 #include <tetos/stdlib.h>
-//#include <tetos/multiboot.h>
 #include <drivers/console/console.h>
 #include <drivers/video/framebuffer.h>
 #include <drivers/i8259/i8259.h>
 //#include <interrupts/idt.h>
-#include <tetos/multiboot2.h>
-
 #include <acpi/acpi.h>
 #include <efi/efi.h>
 #include <efi/efilib.h>
-
-typedef struct {
-    UINT64 FrameBufferBase;
-    UINT32 HorizontalResolution;
-    UINT32 VerticalResolution;
-    UINT32 PixelsPerScanLine;
-
-    VOID  *SystemTable;
-
-    VOID  *MemoryMap;
-    UINTN  MemoryMapSize;
-    UINTN  DescriptorSize;
-    UINT32 DescriptorVersion;
-} boot_info_t;
+#include <tetos/boot.h>
 
 static inline void serial_print(const char *str) {
     while (*str) outb(0x3F8, *str++);
@@ -33,17 +17,7 @@ static inline void serial_print(const char *str) {
 // YOU CANT FUCK UP THE SIGNATURE!! ITS A POINTER NOT A REFERENCE YOU FAT UGLY LOSER!!!!
 void kernel_main(boot_info_t boot_info) {
 
-    // {addr = 3221225472, pitch = 4096, width = 1024, height = 768, bpp = 32, type = 8}
-    fb.addr = boot_info.FrameBufferBase;
-    fb.bpp = 32;
-    fb.pitch = boot_info.PixelsPerScanLine * 4;
-    fb.width = boot_info.HorizontalResolution;
-    fb.height = boot_info.VerticalResolution;
-    fb.type = 8;
-
-    console_init();
-
-    console_printf("Hello, world\n");
+    console_init(&boot_info);
     console_clear();
                         
     

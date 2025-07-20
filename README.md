@@ -12,6 +12,7 @@ A 64-bit hobby operating system
      them in a human readable format
 - [] YOU HAVE TO FIX CONSLE_PRINTF TO ACCOUNT FOR UNSIGNED INTEGERS!!!
 - [] YOU NEED TO FIX RIND_RSDP() BECAUSE YOU'RE DEFAULTING TO ACPI 1.0!!!
+- [] YOU HAVE TO ADD 64-BIT SUPPORT FOR PRINTF. FIX PRINT_NUMBER TO ACCOUNT FOR NEGATIVES
 
 # NOTES
 - Grub 2 with Multiboot 2 will likely fail to boot if you don't align your tags to 8 bytes.

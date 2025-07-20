@@ -1,57 +1,35 @@
 #include <stdarg.h>
 #include <tetos/stdlib.h>
+#include <tetos/boot.h>
 #include <drivers/video/framebuffer.h>
-#include <drivers/video/rgb.h>
+#include "rgb.h"
 #include "console.h"
-#include "vga.h"
-
-static struct console_driver console_drv = {0};
 
 static void noop_clear(void) {};
 static void noop_scroll(void) {};
 static void noop_putc(char c) {};
 
-// Need to fix and make more robust! YOU CAN'T NOT ASSIGN THE FUNCTIONS!!!
-int console_init() {
-    if (fb.addr == 0) {
-        console_drv.clear = noop_clear;
-        console_drv.scroll = noop_scroll;
-        console_drv.putc = noop_putc;
-        console_drv.type = CONSOLE_TYPE_NONE;
+static struct console_driver console_drv = {
+    .clear  = noop_clear,
+    .scroll = noop_scroll,
+    .putc   = noop_putc
+};
+
+int console_init(boot_info_t *boot_info) {
+    fb.addr   = boot_info->FrameBufferBase;
+    fb.pitch  = boot_info->PixelsPerScanLine * 4;
+    fb.width  = boot_info->HorizontalResolution;
+    fb.height = boot_info->VerticalResolution;
+    fb.bpp    = 32;
+
+    if (fb.addr == 0)
         return -1;
-    }
-    else if (fb.type == FB_TYPE_TEXT) {
-        console_drv.type = CONSOLE_TYPE_TEXT;
-        console_drv.clear = vga_clear;
-        console_drv.scroll = vga_scroll;
-        console_drv.putc = vga_putc;
-        return 0;
-    } else if (fb.type == FB_TYPE_RGB || fb.type == 8) { // The 8 for Multiboot 2 UEFI. You need to add a config for this.
-        console_drv.type = CONSOLE_TYPE_RGB;
-        switch (fb.bpp) {
-            case 16: {
-                console_drv.clear = rgb_clear16;
-                console_drv.scroll = rgb_scroll;
-                console_drv.putc = rgb_putc16;
-                break;
-            }
-            case 24: {
-                console_drv.clear = rgb_clear24;
-                console_drv.scroll = rgb_scroll;
-                console_drv.putc = rgb_putc24;
-                break;
-            }
-            case 32: {
-                console_drv.clear = rgb_clear32;
-                console_drv.scroll = rgb_scroll;
-                console_drv.putc = rgb_putc32;
-                break;
-            }
-            default:
-                return -1;
-        }
-        return 0;
-    } else return -1;
+
+    console_drv.clear  = rgb_clear32;
+    console_drv.scroll = rgb_scroll;
+    console_drv.putc   = rgb_putc32;
+
+    return 0;
 }
 
 void console_clear(void) {

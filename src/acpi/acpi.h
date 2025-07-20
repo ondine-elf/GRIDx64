@@ -181,9 +181,9 @@ struct ACPIInfo {
 	bool has_apic;
 	bool apic_enabled;
 
-	bool has_i8042;
 	bool has_vga;
 	bool has_8259;
+	bool has_i8042;
 
 	int numCores;
 	int numEntries;
