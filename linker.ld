@@ -1,10 +1,9 @@
-ENTRY(_start)
+ENTRY(kernel_main)
 
 SECTIONS {
-    . = 2M;
+    . = 0x100000000;
 
     .text BLOCK(4K) : ALIGN(4K) {
-        *(.multiboot)
         *(.text)
     }
 

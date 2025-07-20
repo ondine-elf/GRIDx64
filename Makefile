@@ -16,9 +16,9 @@ INCLUDE_DIRS := include
 LINKER_SCRIPT := linker.ld
 KERNEL_ELF    := $(BIN_DIR)/kernel.elf
 
-ASFLAGS := -ffreestanding -nostdlib -I$(INCLUDE_DIRS) -Isrc -g -O0
-CFLAGS  := -ffreestanding -nostdlib -O2 -Wall -Wextra -I$(INCLUDE_DIRS) -Isrc -g -O0
-LDFLAGS := -ffreestanding -nostdlib -T$(LINKER_SCRIPT) -g -O0
+ASFLAGS := -ffreestanding -nostdlib -I$(INCLUDE_DIRS) -Isrc -g -O0 -mno-red-zone -mcmodel=large
+CFLAGS  := -ffreestanding -nostdlib -O2 -Wall -Wextra -I$(INCLUDE_DIRS) -Isrc -g -O0 -mno-red-zone -mcmodel=large
+LDFLAGS := -ffreestanding -nostdlib -T$(LINKER_SCRIPT) -g -O0 -mno-red-zone -mcmodel=large
 
 ASM_SOURCES := $(shell find $(SRC_DIR) -name '*.S')
 C_SOURCES   := $(shell find $(SRC_DIR) -name '*.c')

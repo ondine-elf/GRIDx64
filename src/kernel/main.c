@@ -14,84 +14,48 @@
 #include <efi/efilib.h>
 
 typedef struct {
-    uint64_t FrameBufferBase;
-    uint32_t Width;
-    uint32_t Height;
-    uint32_t PixelsPerScanLine;
+    UINT64 FrameBufferBase;
+    UINT32 HorizontalResolution;
+    UINT32 VerticalResolution;
+    UINT32 PixelsPerScanLine;
 
-    void *system_table;
+    VOID  *SystemTable;
+
+    VOID  *MemoryMap;
+    UINTN MemoryMapSize;
+    UINTN DescriptorSize;
+    UINT32 DescriptorVersion;
 } boot_info_t;
 
 static inline void serial_print(const char *str) {
     while (*str) outb(0x3F8, *str++);
 }
+// YOU CANT FUCK UP THE SIGNATURE!! ITS A POINTER NOT A REFERENCE YOU FAT UGLY LOSER!!!!
+void kernel_main(boot_info_t boot_info) {
 
-void kernel_main(uint32_t magic, uint32_t addr) {
+    // {addr = 3221225472, pitch = 4096, width = 1024, height = 768, bpp = 32, type = 8}
+    fb.addr = boot_info.FrameBufferBase;
+    fb.bpp = 32;
+    fb.pitch = boot_info.PixelsPerScanLine * 4;
+    fb.width = boot_info.HorizontalResolution;
+    fb.height = boot_info.VerticalResolution;
+    fb.type = 8;
 
-    if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) return;
-    EFI_SYSTEM_TABLE *sys_table; // remove ?
+    console_init();
 
-    struct multiboot_tag *tag;
-
-    // PASSES FRAMEBUFFER AND EFI64!!! Be wary, if you don't request framebuffer it'll try console by fail
-    for (tag = (struct multiboot_tag *)((uintptr_t)addr + 8);
-         tag->type != MULTIBOOT_TAG_TYPE_END;
-         tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
-
-            switch (tag->type) {
-                case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
-                    // {addr = 3221225472, pitch = 4096, width = 1024, height = 768, bpp = 32, type = 8}
-                    struct multiboot_tag_framebuffer *mbf = (struct multiboot_tag_framebuffer *)tag;
-                    fb.addr = mbf->common.framebuffer_addr;
-                    fb.bpp = mbf->common.framebuffer_bpp;
-                    fb.pitch = mbf->common.framebuffer_pitch;
-                    fb.type = mbf->common.type; 
-                    fb.width = mbf->common.framebuffer_width;
-                    fb.height = mbf->common.framebuffer_height;
-
-                    console_init();                    
-                    break;
-                }
-                case MULTIBOOT_TAG_TYPE_EFI64: {
-                    struct multiboot_tag_efi64 *efi64 = (struct multiboot_tag_efi64 *)tag;
-                    EFI_SYSTEM_TABLE *efi_system_table = (EFI_SYSTEM_TABLE *)efi64->pointer;
-                    sys_table = efi_system_table; // remove ?
-
-                    acpi_init(efi_system_table);
-
-                    break;
-                }
-                case MULTIBOOT_TAG_TYPE_MMAP: {
-                    multiboot_memory_map_t *mmap;
-                    for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
-                        (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
-                         mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size)) {
-                            console_printf("Base: 0x%08x%08x, Length: 0x%08x%08x, Type=0x%08x\n",
-                                (unsigned)(mmap->addr >> 32),
-                                (unsigned)(mmap->addr & 0xFFFFFFFF),
-                                (unsigned)(mmap->len >> 32),
-                                (unsigned)(mmap->len & 0xFFFFFFFF),
-                                (unsigned)mmap->type);
-                         }
-                    break;
-                }
-                case MULTIBOOT_TAG_TYPE_EFI_MMAP: {
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-    }
+    console_printf("Hello, world\n");
+    console_clear();
+                        
     
-    if (sys_table == NULL)
-        return;
+    EFI_SYSTEM_TABLE *efi_system_table = (EFI_SYSTEM_TABLE *)boot_info.SystemTable;
+    acpi_init(efi_system_table);
+    
 
     EFI_GUID AcpiTableGuid = ACPI_TABLE_GUID;
     EFI_GUID Acpi20TableGuid = ACPI_20_TABLE_GUID;
 
-    for (UINTN i = 0; i < sys_table->NumberOfTableEntries; i++) {
-        EFI_CONFIGURATION_TABLE *config_table = &sys_table->ConfigurationTable[i];
+    for (UINTN i = 0; i < efi_system_table->NumberOfTableEntries; i++) {
+        EFI_CONFIGURATION_TABLE *config_table = &efi_system_table->ConfigurationTable[i];
         if (memcmp(&config_table->VendorGuid, &AcpiTableGuid, sizeof(EFI_GUID)) == 0) {
             console_printf("Found ACPI 1.0 at 0x%08x\n", (uintptr_t)(void *)config_table);
             struct RSDP *rsdp = (struct RSDP *)config_table->VendorTable;
@@ -105,7 +69,33 @@ void kernel_main(uint32_t magic, uint32_t addr) {
         }
     }
 
+    EFI_MEMORY_DESCRIPTOR *mmap = (EFI_MEMORY_DESCRIPTOR *)boot_info.MemoryMap;
+    UINTN mmap_entries = boot_info.MemoryMapSize / boot_info.DescriptorSize;
+    UINT8 *ptr = (UINT8 *)mmap;
+
+    for (UINTN i = 0; i < mmap_entries; i++) {
+        EFI_MEMORY_DESCRIPTOR *desc = (EFI_MEMORY_DESCRIPTOR *)(ptr + i * boot_info.DescriptorSize);
+
+        if (desc->Type == EfiConventionalMemory ||
+            desc->Type == EfiLoaderCode ||
+            desc->Type == EfiLoaderData) {
+
+            UINT64 phys_start = desc->PhysicalStart;
+            UINT64 size_bytes = desc->NumberOfPages * 4096;
+
+            console_printf("Usable region: Type=%d Start=0x%08x Size=%08x KB\n",
+                        desc->Type,
+                        phys_start,
+                        size_bytes / 1024);
+        }
+    }
+
+    while (1);
+
+
     // ACPI 1.0 @ 0xBF3ECD58
     // ACPI 2.0 @ 0xBF3ECD70
+    // PASSES FRAMEBUFFER AND EFI64!!! Be wary, if you don't request framebuffer it'll try console by fail, for multiboot 2
+
 
 }

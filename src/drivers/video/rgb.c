@@ -61,6 +61,9 @@ void rgb_clear32() {
     uint32_t pixels = (fb.pitch / 4) * fb.height;
     for (uint32_t i = 0; i < pixels; i++)
         pixel[i] = 0;
+
+    cursor_x = 0;
+    cursor_y = 0;
 }
 
 void rgb_scroll() {

@@ -1,3 +1,4 @@
+/*
 .set MAGIC,     0xE85250D6
 .set ARCH,      0
 .set LENGTH,    (multiboot_header_end - multiboot_header_start)
@@ -38,6 +39,7 @@ multiboot_header_start:
     .short 0
     .long  0
 multiboot_header_end:
+*/
 
 /*
 .section .bss
@@ -51,14 +53,13 @@ stack_top:
 .section .data
 gdt_start:
     .quad 0x0000000000000000
-    .quad 0x00CF9A000000FFFF
-    .quad 0x00CF92000000FFFF
+    .quad 0x00AF9A000000FFFF
+    .quad 0x00AF92000000FFFF
 gdt_end:
 
 gdt_descriptor:
     .word gdt_end - gdt_start - 1
     .long gdt_start
-*/
 
 .section .text
 .global _start
@@ -66,11 +67,10 @@ gdt_descriptor:
 .type _start, @function
 _start:
 
-/*
     mov $stack_top, %esp
 
     lgdt gdt_descriptor
-    ljmp $0x08, $protected_mode
+    jmp $0x08, $protected_mode
 
 protected_mode:
     mov $0x10, %cx
@@ -79,11 +79,11 @@ protected_mode:
     mov %cx,   %fs
     mov %cx,   %gs
     mov %cx,   %ss
-*/
 
     cld
     mov %eax, %edi
     mov %ebx, %esi
+
     call  kernel_main
 
     cli
@@ -91,3 +91,4 @@ protected_mode:
     jmp 1b
 
 .size _start, . - _start
+*/
